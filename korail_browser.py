@@ -37,11 +37,19 @@ def search_trains(payload):
             raise RuntimeError("코레일 조회 버튼을 찾지 못했습니다.")
         search_button.click()
         page.wait_for_timeout(5000)
-        rows = page.locator("table tbody tr, [role='row']")
+        rows = page.locator("table tbody tr, table tr, [role='row'], li, article, [class*='train'], [class*='Train']")
         results = []
-        for i in range(min(rows.count(), 100)):
+        seen = set()
+        for i in range(min(rows.count(), 300)):
             text = " ".join(rows.nth(i).inner_text().split())
-            if text:
+            if text and text not in seen and any(word in text.upper() for word in ("KTX", "SRT", "ITX", "무궁화", "새마을")):
+                seen.add(text)
                 results.append({"raw": text})
+        if not results:
+            body = " ".join(page.locator("body").inner_text().split())
+            if any(word in body.upper() for word in ("KTX", "SRT", "ITX", "무궁화", "새마을")):
+                results.append({"raw": body[:4000]})
+            else:
+                raise RuntimeError("코레일 조회는 완료됐지만 열차 결과 영역을 찾지 못했습니다.")
         browser.close()
         return {"source": SEARCH_URL, "checked_at": datetime.now().isoformat(), "trains": results}
