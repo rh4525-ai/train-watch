@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <title>열차 좌석 감시</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div><span class="eyebrow">TRAIN WATCH</span><h1>열차 좌석 감시</h1></div>
+      <button id="logoutBtn" class="text-btn hidden">로그아웃</button>
+    </header>
+
+    <section id="loginCard" class="card">
+      <div class="section-title"><div><h2>코레일 로그인</h2><p>예매 직전까지 진행하려면 로그인하세요.</p></div><span class="secure">보호됨</span></div>
+      <label>코레일 아이디<input id="korailId" autocomplete="username" placeholder="아이디"></label>
+      <label>비밀번호<input id="korailPw" type="password" autocomplete="current-password" placeholder="비밀번호"></label>
+      <button id="loginBtn" class="primary full">로그인</button>
+      <p class="fineprint">실서비스에서는 비밀번호를 저장하지 않고, 공식 인증 세션만 암호화해 단기간 사용합니다.</p>
+    </section>
+
+    <div id="mainView" class="hidden">
+      <section class="card">
+        <div class="section-title"><div><h2>열차 찾기</h2><p>조건에 맞는 열차를 검색하세요.</p></div><span id="loginState" class="badge ok">로그인됨</span></div>
+        <div class="grid two">
+          <label>출발역<input id="from" value="서울"></label>
+          <label>도착역<input id="to" value="부산"></label>
+          <label>출발일<input id="date" type="date"></label>
+          <label>출발 시간<input id="time" type="time" value="09:00"></label>
+        </div>
+        <div class="chips" id="trainTypes"><button class="chip active">전체</button><button class="chip">KTX</button><button class="chip">무궁화호</button><button class="chip">새마을호</button><button class="chip">ITX</button></div>
+        <button id="searchBtn" class="primary full">열차 검색</button>
+      </section>
+
+      <section id="results" class="card hidden"><div class="section-title"><div><h2>열차 목록</h2><p>자동예매할 열차를 선택하세요.</p></div></div><div id="trainList"></div></section>
+
+      <section class="card">
+        <div class="section-title"><div><h2>자동예매 설정</h2><p>선택한 열차에서 가능한 좌석을 자동으로 시도합니다.</p></div></div>
+        <label class="check"><input id="anySeat" type="checkbox" checked> 좌석 종류와 상관없이 가능한 좌석 자동예매</label>
+        <div class="grid two"><label>조회 주기<select id="interval"><option value="10">10초</option><option value="20">20초</option><option value="30">30초</option><option value="60">60초</option></select></label><label>알림 방식<select id="notify"><option>텔레그램 + 이메일</option><option>텔레그램만</option><option>이메일만</option></select></label></div>
+        <button id="watchBtn" class="primary full" disabled>열차를 선택하세요</button>
+        <button id="korailOpenBtn" class="secondary full" disabled>공식 코레일 예매 페이지 열기</button>
+        <p class="notice">무료 서버는 15분간 요청이 없으면 절전될 수 있습니다. 감시 중에는 이 화면을 열어두는 것이 가장 안전합니다.</p>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><div><h2>알림 설정</h2><p>좌석 발견 또는 오류 발생 시 알려드립니다.</p></div><span class="badge idle">미연결</span></div>
+        <label>텔레그램 알림 대상<input id="telegramTarget" placeholder="텔레그램 Chat ID"></label>
+        <label>이메일 알림 주소<input id="emailTarget" type="email" placeholder="받을 이메일 주소"></label>
+        <button id="testNotifyBtn" class="secondary full">알림 테스트</button>
+        <p class="fineprint">실제 전송을 위해서는 서버에 Telegram Bot과 메일 발송 계정을 연결해야 합니다.</p>
+      </section>
+
+      <section class="card status-card"><div class="section-title"><div><h2>실행 상태</h2><p id="lastAction">아직 실행하지 않았습니다.</p></div><span id="statusBadge" class="badge idle">대기 중</span></div><div class="status-row"><span>마지막 조회</span><strong id="lastChecked">-</strong></div><div class="status-row"><span>다음 조회</span><strong id="nextChecked">-</strong></div><div class="status-row"><span>조회 횟수</span><strong id="checkCount">0회</strong></div></section>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
