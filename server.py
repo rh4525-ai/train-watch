@@ -91,6 +91,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, {"ok": True, "service": "train-watch", "time": now(), "korail_key_configured": bool(os.environ.get("KORAIL_SERVICE_KEY"))})
         if self.path == "/api/jobs":
             return self.reply(200, {"jobs": list(JOBS.values())})
+        if self.path == "/api/search":
+            return self.reply(405, {"error": "method_not_allowed"})
         if self.path.startswith("/api/jobs/"):
             job = JOBS.get(self.path[len("/api/jobs/"):])
             return self.reply(200, job) if job else self.reply(404, {"error": "job_not_found"})
@@ -144,6 +146,15 @@ class Handler(BaseHTTPRequestHandler):
             JOB_EVENTS[job_id] = threading.Event()
             threading.Thread(target=watch_job, args=(job_id,), daemon=True).start()
             return self.reply(201, job)
+        if self.path == "/api/search":
+            required = ["departure_station", "arrival_station", "departure_date"]
+            if any(not payload.get(key) for key in required):
+                return self.reply(400, {"error": "missing_search_condition"})
+            try:
+                from korail_browser import search_trains
+                return self.reply(200, search_trains(payload))
+            except Exception as exc:
+                return self.reply(502, {"error": "korail_search_failed", "message": str(exc)})
         if self.path == "/api/notify/test":
             result = send_notifications({
                 "message": payload.get("message", "열차 감시 테스트 알림입니다."),
