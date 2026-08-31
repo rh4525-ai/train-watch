@@ -152,7 +152,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {"error": "missing_search_condition"})
             try:
                 from korail_browser import search_trains
-                return self.reply(200, search_trains(payload))
+                result = {}
+                failure = []
+                worker = threading.Thread(target=lambda: result.update(search_trains(payload)), daemon=True)
+                worker.start()
+                worker.join(60)
+                if worker.is_alive():
+                    return self.reply(504, {"error": "korail_search_timeout", "message": "코레일 검색이 60초 안에 끝나지 않았습니다."})
+                return self.reply(200, result)
             except Exception as exc:
                 return self.reply(502, {"error": "korail_search_failed", "message": str(exc)})
         if self.path == "/api/notify/test":
