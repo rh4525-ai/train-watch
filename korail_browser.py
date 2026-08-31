@@ -13,8 +13,10 @@ def search_trains(payload):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page(locale="ko-KR")
-        page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=45000)
+        page = browser.new_page(locale="ko-KR", ignore_https_errors=True)
+        response = page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=45000)
+        if response and response.status >= 400:
+            raise RuntimeError(f"코레일 페이지 응답 오류: HTTP {response.status}")
         page.wait_for_timeout(3000)
         departure = _first(page, ['input[placeholder*="출발"]', 'input[aria-label*="출발"]', 'input[name*="start"]', 'input[name*="dep"]', '[role="combobox"]'])
         arrival = _first(page, ['input[placeholder*="도착"]', 'input[aria-label*="도착"]', 'input[name*="end"]', 'input[name*="arr"]', '[role="combobox"]:nth-of-type(2)'])
