@@ -14,13 +14,13 @@ def search_trains(payload):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(locale="ko-KR")
-        page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_load_state("networkidle", timeout=30000)
-        departure = _first(page, ['input[placeholder*="출발"]', 'input[aria-label*="출발"]', 'input[name*="start"]'])
-        arrival = _first(page, ['input[placeholder*="도착"]', 'input[aria-label*="도착"]', 'input[name*="end"]'])
+        page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=45000)
+        page.wait_for_timeout(3000)
+        departure = _first(page, ['input[placeholder*="출발"]', 'input[aria-label*="출발"]', 'input[name*="start"]', 'input[name*="dep"]', '[role="combobox"]'])
+        arrival = _first(page, ['input[placeholder*="도착"]', 'input[aria-label*="도착"]', 'input[name*="end"]', 'input[name*="arr"]', '[role="combobox"]:nth-of-type(2)'])
         departure.fill(payload["departure_station"])
         arrival.fill(payload["arrival_station"])
-        date = _first(page, ['input[type="date"]', 'input[placeholder*="날짜"]', 'input[aria-label*="날짜"]'])
+        date = _first(page, ['input[type="date"]', 'input[placeholder*="날짜"]', 'input[aria-label*="날짜"]', 'input[name*="date"]'])
         date.fill(payload["departure_date"])
         if payload.get("departure_time"):
             try:
@@ -28,10 +28,14 @@ def search_trains(payload):
                 time_input.fill(payload["departure_time"])
             except RuntimeError:
                 pass
-        page.get_by_role("button", name="조회").click()
-        page.wait_for_load_state("networkidle", timeout=30000)
-        page.wait_for_timeout(1000)
-        rows = page.locator("table tbody tr")
+        search_button = page.get_by_role("button", name="조회").first
+        if not search_button.count():
+            search_button = page.get_by_text("조회", exact=True).first
+        if not search_button.count():
+            raise RuntimeError("코레일 조회 버튼을 찾지 못했습니다.")
+        search_button.click()
+        page.wait_for_timeout(5000)
+        rows = page.locator("table tbody tr, [role='row']")
         results = []
         for i in range(min(rows.count(), 100)):
             text = " ".join(rows.nth(i).inner_text().split())
